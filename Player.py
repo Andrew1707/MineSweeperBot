@@ -13,7 +13,6 @@ def play(grid):
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
 
 
-# errors, not finnishing game and not doing specail 0 rule
 mines = 2
 gridlen = 5
 grid = MapGen.makeMap(gridlen, mines)

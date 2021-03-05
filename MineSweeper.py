@@ -23,6 +23,7 @@ def reveal_coord(grid, coordinates):
     return 0
 
 
+# obtains user input coordinates and prevents errors
 def pick_coord(grid):
     gridlength = len(grid)
     try:
@@ -41,7 +42,7 @@ def pick_coord(grid):
                 x, y = input("already revealed, try another coordinate: ").split()
             coordinates = (int(x) - 1, int(y) - 1)
     except ValueError:
-        print("please use the format of 'x y'")
+        print("please use the format of 'x y': ")
         return pick_coord(grid)
 
     return coordinates
