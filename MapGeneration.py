@@ -1,10 +1,15 @@
 import random
+import tkinter
+from functools import partial
+
+# benton can we make grid and gridlen global???
 
 
 class GridUnit:
-    def __init__(self, status, revealed):
+    def __init__(self, status, revealed, coordinates):
         self.status = status  # mine, number
         self.revealed = revealed  # yes, no, flag
+        self.coordinates = coordinates
 
 
 # coordinates is a tuple (x,y) for easier to read code
@@ -13,7 +18,21 @@ class Node:
         self.coordinates = coordinates
 
 
-# returns list of coordinates
+# makes sure the coordinate is within the grid
+def isValid(grid, coordinates):
+    # is it out of bounds?
+    x = coordinates[0]
+    y = coordinates[1]
+    gridlength = len(grid)
+    if x >= gridlength or x < 0 or y >= gridlength or y < 0:
+        return False
+    # has it already been revealed
+    if grid[x][y].revealed == "yes":
+        return False
+    return True
+
+
+# returns list of neighbors that surround corrdinate
 def get_neighbors(grid, coordinates):
     neighbors = []
     x = coordinates[0]
@@ -30,28 +49,19 @@ def get_neighbors(grid, coordinates):
     return neighbors
 
 
-def isValid(grid, coordinates):
-    # is it out of bounds?
-    gridlength = len(grid)
-    if (
-        coordinates[0] >= gridlength
-        or coordinates[0] < 0
-        or coordinates[1] >= gridlength
-        or coordinates[1] < 0
-    ):
-        return False
-    return True
-
-
+# makes and returns a grid for minesweeper
 def makeMap(gridlength, mines):
+    # makes sure you can fit all the bombs in grid
     if mines > gridlength * gridlength:
         print("Too many mines to fit in grid error")
         return None
 
     grid = [
-        [GridUnit(None, "no") for j in range(gridlength)] for i in range(gridlength)
+        [GridUnit(None, "no", (i, j)) for j in range(gridlength)]
+        for i in range(gridlength)
     ]
 
+    # adds mines in random locations and does not overlap
     while mines > 0:
         mines -= 1
         x = random.randint(0, len(grid) - 1)
@@ -61,6 +71,7 @@ def makeMap(gridlength, mines):
         else:
             mines += 1
 
+    # adds number values to each non mine to represent clues
     for i in range(gridlength):
         for j in range(gridlength):
             if grid[i][j].status != "mine":
@@ -73,7 +84,7 @@ def makeMap(gridlength, mines):
     return grid
 
 
-# prints grid out of easy to read O (open) and X (closed) characters
+# prints grid out of easy to read emojis
 def gridPrint(grid):
     gridlength = len(grid)
     for i in range(gridlength):
@@ -91,6 +102,7 @@ def gridPrint(grid):
                 print("🚩", end=" ")
 
 
+# shows status of all units
 def reveal_all(grid):
     gridlength = len(grid)
     for i in range(gridlength):
