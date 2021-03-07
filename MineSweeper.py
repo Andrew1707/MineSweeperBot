@@ -27,10 +27,10 @@ def reveal_coord(grid, coordinates):
 def pick_coord(grid):
     gridlength = len(grid)
     try:
-        x, y = input("\nCan I take your coords sir? In the form 'x y': ").split()
+        y, x = input("\nMay I take your coords sir? In the form 'x y': ").split()
         coordinates = (int(x) - 1, int(y) - 1)
         while MapGen.isValid(grid, coordinates) == False:
-            if int(x) >= gridlength or int(x) < 0 or int(y) >= gridlength or int(y) < 0:
+            if int(x) > gridlength or int(x) <= 0 or int(y) > gridlength or int(y) <= 0:
                 x, y = input(
                     "out of bounds: \nbounds are: "
                     + str(gridlength)

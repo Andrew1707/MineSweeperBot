@@ -1,6 +1,5 @@
 import random
-import tkinter
-from functools import partial
+
 
 # benton can we make grid and gridlen global???
 
@@ -9,13 +8,7 @@ class GridUnit:
     def __init__(self, status, revealed, coordinates):
         self.status = status  # mine, number
         self.revealed = revealed  # yes, no, flag
-        self.coordinates = coordinates
-
-
-# coordinates is a tuple (x,y) for easier to read code
-class Node:
-    def __init__(self, coordinates):
-        self.coordinates = coordinates
+        self.coordinates = coordinates  # tuples (x,y)
 
 
 # makes sure the coordinate is within the grid
@@ -94,8 +87,12 @@ def gridPrint(grid):
                 if grid[i][j].status == "mine":
                     print("💣", end=" ")
                 else:
-                    emoji = str(grid[i][j].status) + "\uFE0F\u20E3"
-                    print(emoji, end="  ")
+                    if grid[i][j].status == 0:
+                        print("🟦", end=" ")
+                    # turn clue number into emoji using unicode
+                    else:
+                        emoji = str(grid[i][j].status) + "\uFE0F\u20E3"
+                        print(emoji, end="  ")
             elif grid[i][j].revealed == "no":
                 print("⬛", end=" ")
             else:
