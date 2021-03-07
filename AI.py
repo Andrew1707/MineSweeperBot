@@ -13,6 +13,7 @@ def random_move(grid):
 
 
 # returns list of coordinates that still have un-flagged and unrevealed neighbors
+# benton what if 1 mine revealed
 def needed_clues(grid):
     clues_to_check = {}
     for x in range(gridlen):
