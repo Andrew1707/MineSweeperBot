@@ -1,5 +1,11 @@
 import MineSweeper as MineSweep
 import MapGeneration as MapGen
+import sys
+
+x = 2500
+# max size is x/x
+# 2500 means max grid size is 50 by 50
+sys.setrecursionlimit(x)
 
 
 def play(grid):
@@ -13,8 +19,8 @@ def play(grid):
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
 
 
-mines = 2
-gridlen = 5
+mines = 1
+gridlen = 50
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 play(grid)

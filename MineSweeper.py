@@ -18,7 +18,7 @@ def reveal_coord(grid, coordinates):
     if grid[x][y].status == 0:
         neighbors = MapGen.get_neighbors(grid, coordinates)
         for i in neighbors:
-            if grid[i.coordinates[0]][i.coordinates[1]].revealed != "yes":
+            if grid[i.coordinates[0]][i.coordinates[1]].revealed == "no":
                 reveal_coord(grid, i.coordinates)
     return 0
 
