@@ -6,7 +6,7 @@ def reveal_coord(grid, coordinates):
     x = coordinates[0]
     y = coordinates[1]
     # if coord already revealed or out of bounds try again (needed for 0 rule)
-    if MapGen.isValid(grid, coordinates) == False:
+    if MapGen.isValid(grid, coordinates) == False or grid[x][y].revealed == "yes":
         return None
     # show whats square value is
     grid[x][y].revealed = "yes"
@@ -29,8 +29,11 @@ def pick_coord(grid):
     try:
         y, x = input("\nMay I take your coords sir? In the form 'x y': ").split()
         coordinates = (int(x) - 1, int(y) - 1)
-        while MapGen.isValid(grid, coordinates) == False:
-            if int(x) > gridlength or int(x) <= 0 or int(y) > gridlength or int(y) <= 0:
+        while (
+            MapGen.isValid(grid, coordinates) == False
+            or grid[int(x) - 1][int(y) - 1].revealed == "yes"
+        ):
+            if MapGen.isValid(grid, (int(x) - 1, int(y) - 1)) == False:
                 x, y = input(
                     "out of bounds: \nbounds are: "
                     + str(gridlength)
