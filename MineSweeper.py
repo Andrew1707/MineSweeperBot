@@ -41,7 +41,7 @@ def pick_coord(grid):
                     + str(gridlength)
                     + " try again: "
                 ).split()
-            else:
+            elif(grid[int(x) - 1][int(y) - 1].revealed == "yes"):
                 x, y = input("already revealed, try another coordinate: ").split()
             coordinates = (int(x) - 1, int(y) - 1)
     except ValueError:

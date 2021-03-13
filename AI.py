@@ -114,7 +114,8 @@ def AI(grid):
         elif len(safe_spaces) != 0:
             print("safe move")
             safe_coords = safe_spaces.pop()
-            mines_detonated += MineSweep.reveal_coord(grid, safe_coords)
+            if grid[safe_coords[0]][safe_coords[1]].revealed == "no":
+                mines_detonated += MineSweep.reveal_coord(grid, safe_coords)
         else:
             print("\n\nrandom move")
             random_coords = random_move(grid)
@@ -126,8 +127,8 @@ def AI(grid):
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
 
 
-mines = 4
-gridlen = 5
+mines = 20
+gridlen = 10
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 AI(grid)

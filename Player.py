@@ -19,8 +19,8 @@ def play(grid):
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
 
 
-mines = 1
-gridlen = 50
+mines = 4
+gridlen = 5
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 play(grid)

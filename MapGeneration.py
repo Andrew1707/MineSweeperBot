@@ -20,8 +20,8 @@ def isValid(grid, coordinates):
     if x >= gridlength or x < 0 or y >= gridlength or y < 0:
         return False
     # has it already been revealed
-    if grid[x][y].revealed == "yes":
-        return False
+    # if grid[x][y].revealed == "yes":
+    #     return False
     return True
 
 
@@ -34,6 +34,7 @@ def get_neighbors(grid, coordinates):
     j = y - 1
     while i <= x + 1:
         while j <= y + 1:
+            # benton does not add revealed bombs rip
             if isValid(grid, (i, j)) and not (i == x and j == y):
                 neighbors.append(grid[i][j])
             j += 1
