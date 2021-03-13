@@ -18,6 +18,7 @@ def random_move(grid):
 # returns list of coordinates that still have un-flagged and unrevealed neighbors
 def needed_clues(grid):
     clues_to_check = set()
+    gridlen = len(grid)  # benton work without this line ??????
     for x in range(gridlen):
         for y in range(gridlen):
             # if revealed and not a mine
@@ -31,7 +32,7 @@ def needed_clues(grid):
 
 
 # if square has number equal to number of unrevealed they are all bombs and return bomb coords
-def clue_equal_unrevealed(grid, clues_to_check):
+def bomb_coord_set(grid, clues_to_check):
     flag_these = set()
     for c in clues_to_check:
         x = c[0]
@@ -62,7 +63,7 @@ def clue_equal_unrevealed(grid, clues_to_check):
 
 
 # if square has number equal to num flags/mines around it , the rest are safe and return safe coords
-def bombs_found(grid, clues_to_check):
+def safe_coord_set(grid, clues_to_check):
     safe_coords = set()
     for c in clues_to_check:
         x = c[0]
@@ -86,6 +87,38 @@ def bombs_found(grid, clues_to_check):
     return safe_coords
 
 
+# send DEEP COPY of POSSIBLE grid configs and return if possible or not
+def impossible(grid):
+    gridlen = len(grid)
+    for x in range(gridlen):
+        for y in range(gridlen):
+            neighbors = MapGen.get_neighbors(grid, (x, y))
+            bomb_neighbors = 0
+            if grid[x][y].revealed == "yes" and grid[x][y].status != "mine":
+                for n in neighbors:
+                    if n.revealed == "flag" or (
+                        n.revealed == "yes" and n.status == "mine"
+                    ):
+                        bomb_neighbors += 1
+                if grid[x][y].status != bomb_neighbors:
+                    return False
+    return True
+
+
+# returns the number of bombs found so if you know total bombs you get remainder
+def bombs_found(grid):
+    gridlen = len(grid)
+    bombs = 0
+    for x in range(gridlen):
+        for y in range(gridlen):
+            if grid[x][y].revealed == "flag" or (
+                grid[x][y].revealed == "yes" and grid[x][y].status == "mine"
+            ):
+                bombs += 1
+    return bombs
+
+
+# function which is the brain of the AI
 def AI(grid):
 
     mines_detonated = 0
@@ -102,20 +135,23 @@ def AI(grid):
         print("\nunchecked", unchecked)
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
-            flag_these = clue_equal_unrevealed(grid, unchecked)
-            safe_spaces = bombs_found(grid, unchecked)
+            flag_these = bomb_coord_set(grid, unchecked)
+            safe_spaces = safe_coord_set(grid, unchecked)
         print("\nflags", flag_these)
         print("\nsafes", safe_spaces)
         # time to make a move
+        # if you can flag spend the move to flag
         if len(flag_these) != 0:
             print("flag move")
             flag_coords = flag_these.pop()
             grid[flag_coords[0]][flag_coords[1]].revealed = "flag"
+        # if there is a safe space then click it
         elif len(safe_spaces) != 0:
             print("safe move")
             safe_coords = safe_spaces.pop()
             if grid[safe_coords[0]][safe_coords[1]].revealed == "no":
                 mines_detonated += MineSweep.reveal_coord(grid, safe_coords)
+        # if you have no useful info do a random move
         else:
             print("\n\nrandom move")
             random_coords = random_move(grid)
