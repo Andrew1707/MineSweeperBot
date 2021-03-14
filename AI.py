@@ -2,6 +2,28 @@ import MineSweeper as MineSweep
 import MapGeneration as MapGen
 import random
 
+
+class Equation:
+    def __init__(self, loc_set, mines_left):
+        self.loc_set = loc_set
+        self.mines_left = mines_left
+
+
+def database_print(database):
+    print('database: [', end='')
+    for x in database:
+        print(x.loc_set, f' = {x.mines_left}', end='; ')
+    print(']')
+
+
+# checks if an equation object is in database
+def in_database(eq, database):
+    for x in database:
+        if eq.loc_set.symmetric_difference(x.loc_set) == set() and eq.mines_left == x.mines_left:
+            return True
+    return False
+
+
 # when in doubt make any move but not on a flag
 def random_move(grid):
     gridlen = len(grid)
@@ -16,23 +38,35 @@ def random_move(grid):
 
 
 # returns list of coordinates that still have un-flagged and unrevealed neighbors
-def needed_clues(grid):
+def needed_clues(grid, database):
     clues_to_check = set()
-    gridlen = len(grid)  # benton work without this line ??????
     for x in range(gridlen):
         for y in range(gridlen):
             # if revealed and not a mine
             if grid[x][y].revealed == "yes" and grid[x][y].status != "mine":
                 neighbors = MapGen.get_neighbors(grid, (x, y))
+                
+                # count surrounding mines & unrevealed squares
+                eq_locs = set()
+                flags_mines = 0
                 for n in neighbors:
                     if n.revealed == "no":
-                        clues_to_check.add((x, y))
-                        break  # has unrevealed neighbor no need to check for more
+                        eq_locs.add(n.coordinates)
+                    elif n.revealed == "flag" or n.status == "mine":
+                        flags_mines += 1
+
+                if len(eq_locs) != 0: # there are hidden neighbors 
+                    clues_to_check.add((x, y))
+                    
+                    # equate unrevealed squares to clue - (flags + mines)
+                    temp = Equation(eq_locs, grid[x][y].status - flags_mines)
+                    # update database
+                    if not in_database(temp, database):
+                        database.add(temp)
     return clues_to_check
 
-
 # if square has number equal to number of unrevealed they are all bombs and return bomb coords
-def bomb_coord_set(grid, clues_to_check):
+def bomb_coord_set(grid, clues_to_check, database):
     flag_these = set()
     for c in clues_to_check:
         x = c[0]
@@ -59,6 +93,18 @@ def bomb_coord_set(grid, clues_to_check):
             # if unrevealed bombs = clue - found bombs, then unrevealed are bombs and flag them
             if unrevealed == grid[x][y].status - actual_threats:
                 flag_these = flag_these | potential_threats
+
+                # update database equations
+                for p in potential_threats:
+                    for i in database:
+                        # if flag square is the only tuple in equation
+                        if i.loc_set.symmetric_difference(set(p)) == set():
+                            database.remove(i) #! double check if this works
+                        # if flag square is in an equation, remove its tuple & subtract 1 from mines total
+                        elif p in i.loc_set:
+                            i.loc_set.remove(p)
+                            i.mines_left -= 1
+
     return flag_these
 
 
@@ -106,6 +152,7 @@ def impossible(grid):
 
 
 # returns the number of bombs found so if you know total bombs you get remainder
+#! I don't think agent is supposed to have access to total # of bombs in grid :(
 def bombs_found(grid):
     gridlen = len(grid)
     bombs = 0
@@ -118,6 +165,16 @@ def bombs_found(grid):
     return bombs
 
 
+# if unclear about which neighbors are mines
+def infer(grid, clues_to_check):
+    safe_coords = set()
+    mine_coords = set()
+    # 1. Set up equations related to clues_to_check (this is being implemented in other methods)
+    # 2. Recognize clear & mine spots via equation subtraction (look for eqs that are subsets of other eqs)
+    # This would constrain vars more
+    # 3. Guess and check, see if mine/clear states are possible with curr knowledge
+
+
 # function which is the brain of the AI
 def AI(grid):
 
@@ -126,16 +183,24 @@ def AI(grid):
     print()
     first_move = random_move(grid)
     mines_detonated += MineSweep.reveal_coord(grid, first_move)
+    
     flag_these = set()
     safe_spaces = set()
+    database = set()
+
     while MineSweep.win_condition(grid) == False:
         MapGen.gridPrint(grid)
         # pick coord
-        unchecked = needed_clues(grid)
+        unchecked = needed_clues(grid, database)
         print("\nunchecked", unchecked)
+
+        for d in database: #!rem
+            print(f'{d.loc_set} = {d.mines_left}') #!rem
+        print('\n')
+
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
-            flag_these = bomb_coord_set(grid, unchecked)
+            flag_these = bomb_coord_set(grid, unchecked, database)
             safe_spaces = safe_coord_set(grid, unchecked)
         print("\nflags", flag_these)
         print("\nsafes", safe_spaces)
@@ -163,8 +228,8 @@ def AI(grid):
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
 
 
-mines = 20
-gridlen = 10
+mines = 2
+gridlen = 5
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 AI(grid)
