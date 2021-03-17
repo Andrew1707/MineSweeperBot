@@ -125,36 +125,6 @@ def bomb_coord_set(grid, clues_to_check):
             if unrevealed == grid[x][y].status - actual_threats:
                 flag_these = flag_these | potential_threats
 
-<<<<<<< HEAD
-    # update database equations
-    for f in flag_these:
-        i = 0
-        l = len(database)
-        while i < l:
-            if f in database[i].loc_set:
-                # if flag square is the only tuple in equation
-                if len(database[i].loc_set) == 1:
-                    database.remove(database[i])
-                    i -= 1
-                    l -= 1
-                # else remove square tuple from eqs & subtract 1 from mines total
-                else:
-                    new_eq = Equation(
-                        database[i].loc_set.copy(), database[i].mines_left - 1
-                    )
-                    new_eq.loc_set.remove(f)
-                    if not in_database(new_eq, database):
-                        database[i].loc_set.remove(f)
-                        database[i].mines_left -= 1
-                    # unless new eq already exists in database, in that case just delete
-                    else:
-                        database.remove(database[i])
-                        i -= 1
-                        l -= 1
-            i += 1
-
-=======
->>>>>>> 8ebc4e70a7c70e5eddc003fac96ce2f91fb1ee25
     return flag_these
 
 
@@ -181,35 +151,6 @@ def safe_coord_set(grid, clues_to_check):
         if grid[x][y].status == mines:
             safe_coords = safe_coords | safe_neighbors
 
-<<<<<<< HEAD
-    # update database equations
-    for s in safe_coords:
-        i = 0
-        l = len(database)
-        while i < l:
-            if s in database[i].loc_set:
-                # if flag square is the only tuple in equation
-                if len(database[i].loc_set) == 1:
-                    database.remove(database[i])
-                    i -= 1
-                    l -= 1
-                # else remove square tuple from eqs & subtract 1 from mines total
-                else:
-                    new_eq = Equation(
-                        database[i].loc_set.copy(), database[i].mines_left
-                    )
-                    new_eq.loc_set.remove(s)
-                    if not in_database(new_eq, database):
-                        database[i].loc_set.remove(s)
-                    # unless new eq already exists in database, in that case just delete
-                    else:
-                        database.remove(database[i])
-                        i -= 1
-                        l -= 1
-            i += 1
-
-=======
->>>>>>> 8ebc4e70a7c70e5eddc003fac96ce2f91fb1ee25
     return safe_coords
 
 
@@ -232,8 +173,6 @@ def impossible(grid):
 
 
 # returns the number of bombs found so if you know total bombs you get remainder
-#! I don't think agent is supposed to have access to total # of bombs in grid :(
-# there are too parts one where they don't know and one where they do. i think its extra cred
 def bombs_found(grid):
     gridlen = len(grid)
     bombs = 0
@@ -276,73 +215,51 @@ def database_update(space, database, mode='safe'):
         i += 1
 
 
+# checks for locations in database that have been auto-revealed and updates appropriately
+def catch_auto_reveals(grid, database):
+    new_reveals = set()
+    for eq in database:
+        for square in eq.loc_set:
+            x = square[0]
+            y = square[1]
+            if grid[x][y].revealed == 'yes' and grid[x][y].status != 'mine':
+                new_reveals.add(square)
+    for square in new_reveals:
+        database_update(square, database, 'safe')
+
+
+# Recognize clear & mine spots via equation subtraction (look for eqs that are subsets of other eqs)
 # returns solvable (safe/mine) values from database equations
 def infer(database):
     safe_coords = set()
     mine_coords = set()
-    # 1. Set up equations related to clues_to_check (this is being implemented in other methods)
-    # 2. Recognize clear & mine spots via equation subtraction (look for eqs that are subsets of other eqs)
-<<<<<<< HEAD
-    for d in database:
-        # Look if d is subset of other database eqs
-        generator = (e for e in database if e != d)
-        for e in generator:
-            1  #! This is filler, checking for subsets here -Benton
-    # 3. Guess and check, see if mine/clear states are possible with curr knowledge
-=======
-    #inference_is_possible = True
-    i = 0
-    l = len(database)
-    new_eq_made = False
-
-    while i < l:
-        # End condition: no new equations are made in one sweep of database, meaning
-        # that no new conclusions can be drawn
-
+    # This outer loop will still hit eqs added to database
+    for eq1 in database:
         # Look if database[i] is subset of other database eqs
-        generator = (d for d in database if d != database[i])
-        for d in generator:
-            if database[i].loc_set.issubset(d.loc_set):
-                print(f'subset found: {database[i].loc_set} in {d.loc_set}', end=' ') #! rem
+        generator = (eq2 for eq2 in database if eq2 != eq1)
+        for eq2 in generator:
+            if eq1.loc_set.issubset(eq2.loc_set):
                 tentative_eq = Equation(
-                    d.loc_set - database[i].loc_set,
-                    d.mines_left - database[i].mines_left)
+                    eq2.loc_set - eq1.loc_set,
+                    eq2.mines_left - eq1.mines_left)
                 
                 if not in_database(tentative_eq, database):
                     # if tentative equation is a conclusion (a square is a mine/clear)
                     if len(tentative_eq.loc_set) == 1:
-                        print('length is 1') #!rem
                         if tentative_eq.mines_left == 0:
                             safe_coords = safe_coords | tentative_eq.loc_set
                         elif tentative_eq.mines_left == 1:
                             mine_coords = mine_coords | tentative_eq.loc_set
-                        else:
-                            print(f"Mines Left Value Error, mines_left = {tentative_eq.mines_left}") #!rem, this is just testing
+                    
                     # all squares in equation are clear
                     elif tentative_eq.mines_left == 0:
-                        print('zero mines left') #!rem
                         safe_coords = safe_coords | tentative_eq.loc_set
+                    
                     # no explicit conclusion, add new equation to database
                     else:
-                        new_eq_made = True
                         database.append(tentative_eq)
-                        print("database update:") #!rem
-                        database_print(database) #!rem
-                else: #!rem
-                    print('no inference drawn') #!rem
-        
-        if i != (l-1):
-            i += 1
-        else:
-            if new_eq_made == True: # reloop thru database to search for new inferences
-                print('RELOOPING')
-                i = 0
-                new_eq_made = False
-    
+ 
     return safe_coords, mine_coords
-    # 3. Guess and check, see if mine/clear states are possible with curr knowledge?
-    # SMART GUESSER?? (like if 1 appears, just guess close b/c you have 1/8 chance of bomb vs unknown elsewhere?)
->>>>>>> 8ebc4e70a7c70e5eddc003fac96ce2f91fb1ee25
 
 
 # general AI procedure: check for obvious flags and safe spaces, infer using database, then guess
@@ -360,34 +277,32 @@ def AI(grid):
 
     while MineSweep.win_condition(grid) == False:
         MapGen.gridPrint(grid)
-        # pick coord
+        # list (clue) squares with hidden neighbors
         unchecked = needed_clues(grid, database)
-        print("\nunchecked", unchecked)
-        #database_print(database) #!rem
+        print("\nunchecked", unchecked) #!rem
 
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
             flag_these = bomb_coord_set(grid, unchecked)
             safe_spaces = safe_coord_set(grid, unchecked)
+            
+            catch_auto_reveals(grid, database)
             inferred_safes, inferred_flags = infer(database)
-            #print(f'inferred_safes: {inferred_safes}') #!rem
-            #print(f'inferred_flags: {inferred_flags}') #!rem
             safe_spaces = safe_spaces | inferred_safes
             flag_these = flag_these | inferred_flags
-        print("\nflags", flag_these)
-        print("safes", safe_spaces)
-        #return #!rem
+        print("\nflags", flag_these) #!rem
+        print("safes", safe_spaces) #!rem
 
         # time to make a move
         # if you can flag spend the move to flag
         if len(flag_these) != 0:
-            print("flag move")
+            print("flag move") #!rem
             flag_coords = flag_these.pop()
             grid[flag_coords[0]][flag_coords[1]].revealed = "flag"
             database_update(flag_coords, database, 'flag')
         # if there is a safe space then click it
         elif len(safe_spaces) != 0:
-            print("safe move")
+            print("safe move") #!rem
             safe_coords = safe_spaces.pop()
             # for case when a safe coord is a zero and that zero reveals a coord in safe coords
             if grid[safe_coords[0]][safe_coords[1]].revealed == "no":
@@ -395,7 +310,7 @@ def AI(grid):
             database_update(safe_coords, database, 'safe')
         # if you have no useful info do a random move
         else:
-            print("\n\nrandom move")
+            print("\n\nrandom move") #!rem
             random_coords = random_move(grid)
             print(random_coords[0] + 1, random_coords[1] + 1)
             mines_detonated += MineSweep.reveal_coord(grid, random_coords)
