@@ -334,10 +334,11 @@ def dumbAI(grid):
 
 # general AI procedure: check for obvious flags and safe spaces, infer using database, then guess
 def smartAI(grid):
-
+    move_num = 1
     mines_detonated = 0
     MapGen.gridPrint(grid)
-    print()
+    print("\n Move: ", move_num)
+    move_num += 1
     first_move = random_move(grid)
     mines_detonated += MineSweep.reveal_coord(grid, first_move)
 
@@ -349,10 +350,12 @@ def smartAI(grid):
         MapGen.gridPrint(grid)
         # list (clue) squares with hidden neighbors
         unchecked = smart_needed_clues(grid, database)
-        print("\nunchecked", unchecked)  #!rem
+        print("\n\nMove: ", move_num)
+        move_num += 1
 
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
+            print("\nunchecked", unchecked)  #!rem
             flag_these = bomb_coord_set(grid, unchecked)
             safe_spaces = safe_coord_set(grid, unchecked)
 
@@ -392,8 +395,8 @@ def smartAI(grid):
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
 
 
-mines = 4
-gridlen = 5
+mines = 12
+gridlen = 8
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 smartAI(grid)
