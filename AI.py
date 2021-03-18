@@ -255,7 +255,7 @@ def catch_auto_reveals(grid, database):
 
 # Recognize clear & mine spots via equation subtraction (look for eqs that are subsets of other eqs)
 # returns solvable (safe/mine) values from database equations
-def infer(database):
+def infer(database, grid):
     safe_coords = set()
     mine_coords = set()
     # This outer loop will still hit eqs added to database
@@ -271,9 +271,11 @@ def infer(database):
                 if not in_database(tentative_eq, database):
                     # if tentative equation is a conclusion (a square is a mine/clear)
                     if len(tentative_eq.loc_set) == 1:
+                        tup = next(iter(tentative_eq.loc_set))
+                        tup_revealed = grid[tup[0]][tup[1]].revealed == "yes"
                         if tentative_eq.mines_left == 0:
                             safe_coords = safe_coords | tentative_eq.loc_set
-                        elif tentative_eq.mines_left == 1:
+                        elif tentative_eq.mines_left == 1 and not tup_revealed:
                             mine_coords = mine_coords | tentative_eq.loc_set
 
                     # all squares in equation are clear
@@ -357,7 +359,7 @@ def smartAI(grid):
             safe_spaces = safe_coord_set(grid, unchecked)
 
             catch_auto_reveals(grid, database)
-            inferred_safes, inferred_flags = infer(database)
+            inferred_safes, inferred_flags = infer(database, grid)
             safe_spaces = safe_spaces | inferred_safes
             flag_these = flag_these | inferred_flags
             print("\ninferred flags", inferred_flags)  #!rem
