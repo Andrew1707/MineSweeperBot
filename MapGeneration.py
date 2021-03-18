@@ -16,9 +16,6 @@ def isValid(grid, coordinates):
     gridlength = len(grid)
     if x >= gridlength or x < 0 or y >= gridlength or y < 0:
         return False
-    # has it already been revealed
-    # if grid[x][y].revealed == "yes":
-    #     return False
     return True
 
 

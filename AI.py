@@ -69,7 +69,24 @@ def smart_random_move(grid, clues_to_check):
 
 
 # returns list of coordinates that still have un-flagged and unrevealed neighbors
-def needed_clues(grid, database):
+def dumb_needed_clues(grid):
+    clues_to_check = set()
+    gridlen = len(grid)
+    for x in range(gridlen):
+        for y in range(gridlen):
+            # if revealed and not a mine
+            if grid[x][y].revealed == "yes" and grid[x][y].status != "mine":
+                neighbors = MapGen.get_neighbors(grid, (x, y))
+                for n in neighbors:
+                    if n.revealed == "no":
+                        clues_to_check.add((x, y))
+                        break  # has unrevealed neighbor no need to check for more
+    return clues_to_check
+
+
+# performs the same function as dumb_needed_clues, but also adds equations to database
+# for each clue_to_check coordinate
+def smart_needed_clues(grid, database):
     clues_to_check = set()
     for x in range(gridlen):
         for y in range(gridlen):
@@ -262,8 +279,53 @@ def infer(database):
     return safe_coords, mine_coords
 
 
+# Base AI algorithm specified by Dr. Cowan's instructions
+def dumbAI(grid):
+
+    mines_detonated = 0
+    MapGen.gridPrint(grid)
+    print()
+    first_move = random_move(grid)
+    mines_detonated += MineSweep.reveal_coord(grid, first_move)
+    flag_these = set()
+    safe_spaces = set()
+    while MineSweep.win_condition(grid) == False:
+        MapGen.gridPrint(grid)
+        # pick coord
+        unchecked = dumb_needed_clues(grid)
+        print("\nunchecked", unchecked)
+        # if set to flag and click are empty tryand fill them
+        if len(flag_these) == 0 and len(safe_spaces) == 0:
+            flag_these = bomb_coord_set(grid, unchecked)
+            safe_spaces = safe_coord_set(grid, unchecked)
+        print("\nflags", flag_these)
+        print("\nsafes", safe_spaces)
+        # time to make a move
+        # if you can flag spend the move to flag
+        if len(flag_these) != 0:
+            print("flag move")
+            flag_coords = flag_these.pop()
+            grid[flag_coords[0]][flag_coords[1]].revealed = "flag"
+        # if there is a safe space then click it
+        elif len(safe_spaces) != 0:
+            print("safe move")
+            safe_coords = safe_spaces.pop()
+            if grid[safe_coords[0]][safe_coords[1]].revealed == "no":
+                mines_detonated += MineSweep.reveal_coord(grid, safe_coords)
+        # if you have no useful info do a random move
+        else:
+            print("\n\nrandom move")
+            random_coords = random_move(grid)
+            print(random_coords[0] + 1, random_coords[1] + 1)
+            mines_detonated += MineSweep.reveal_coord(grid, random_coords)
+
+    MapGen.reveal_all(grid)
+    MapGen.gridPrint(grid)
+    print("\nyou blew up ", mines_detonated, " mines. Lets play again")
+
+
 # general AI procedure: check for obvious flags and safe spaces, infer using database, then guess
-def AI(grid):
+def smartAI(grid):
 
     mines_detonated = 0
     MapGen.gridPrint(grid)
@@ -278,7 +340,7 @@ def AI(grid):
     while MineSweep.win_condition(grid) == False:
         MapGen.gridPrint(grid)
         # list (clue) squares with hidden neighbors
-        unchecked = needed_clues(grid, database)
+        unchecked = smart_needed_clues(grid, database)
         print("\nunchecked", unchecked)  #!rem
 
         # if set to flag and click are empty tryand fill them
@@ -324,6 +386,6 @@ mines = 4
 gridlen = 5
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
-AI(grid)
+smartAI(grid)
 
 
