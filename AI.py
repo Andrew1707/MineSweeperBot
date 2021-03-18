@@ -54,26 +54,44 @@ def random_move(grid):
 def smart_random_move(grid, clues_to_check):
     best_probability = 0
     best_coords = set()
+    all_prob_coords = set()
     for c in clues_to_check:
         neighbors = MapGen.get_neighbors(grid, (c[0], c[1]))
         unrevealed = set()
         num_bombs = 0
-
+        # count unrevealed and mines
         for n in neighbors:
             if n.revealed == "no":
-                unrevealed += n.coordinates
+                unrevealed.add(n.coordinates)
+                all_prob_coords.add(n.coordinates)
             elif n.revealed == "flag" or n.status == "mine":
                 num_bombs += 1
-
+        # prob one of the unrevealed is not a mine
         bombs_left = grid[c[0]][c[1]].status - num_bombs
         prob = (len(unrevealed) - bombs_left) / len(unrevealed)
+
+        # only store the best prob
         if prob > best_probability:
             best_probability = prob
             best_coords = unrevealed
+    # if the best probability is too low pick unknown area
     if best_probability >= 2 / 3:
-        return random.choice(tuple(best_coords))
-    else:
-        return random_move(grid)
+        return random.choice(tuple(best_coords)), best_probability
+
+    # get all unrevealed coords and subtract all too low prob coords from before
+    total_unrevealed_coords = set()
+    gridlen = len(grid)
+    for x in range(gridlen):
+        for y in range(gridlen):
+            if grid[x][y].revealed == "no":
+                total_unrevealed_coords.add(grid[x][y].coordinates)
+    remainder = total_unrevealed_coords - all_prob_coords
+
+    # if there are any remainders use them
+    if len(remainder) != 0:
+        return random.choice(tuple(remainder)), "<2/3"
+    # else use the best prob from before
+    return random.choice(tuple(best_coords)), best_probability
 
 
 # returns list of coordinates that still have un-flagged and unrevealed neighbors
@@ -177,24 +195,6 @@ def safe_coord_set(grid, clues_to_check):
             safe_coords = safe_coords | safe_neighbors
 
     return safe_coords
-
-
-# send DEEP COPY of POSSIBLE grid configs and return if possible or not
-def impossible(grid):
-    gridlen = len(grid)
-    for x in range(gridlen):
-        for y in range(gridlen):
-            neighbors = MapGen.get_neighbors(grid, (x, y))
-            bomb_neighbors = 0
-            if grid[x][y].revealed == "yes" and grid[x][y].status != "mine":
-                for n in neighbors:
-                    if n.revealed == "flag" or (
-                        n.revealed == "yes" and n.status == "mine"
-                    ):
-                        bomb_neighbors += 1
-                if grid[x][y].status != bomb_neighbors:
-                    return False
-    return True
 
 
 # returns the number of bombs found so if you know total bombs you get remainder
@@ -360,6 +360,8 @@ def smartAI(grid):
             inferred_safes, inferred_flags = infer(database)
             safe_spaces = safe_spaces | inferred_safes
             flag_these = flag_these | inferred_flags
+            print("\ninferred flags", inferred_flags)  #!rem
+            print("inferred safes", inferred_safes)  #!rem
         print("\nflags", flag_these)  #!rem
         print("safes", safe_spaces)  #!rem
 
@@ -380,9 +382,9 @@ def smartAI(grid):
             database_update(safe_coords, database, "safe")
         # if you have no useful info do a random move
         else:
-            print("\n\nrandom move")  #!rem
-            random_coords = smart_random_move(grid, unchecked)
-            print(random_coords[0] + 1, random_coords[1] + 1)
+            print("\n\nsmart random move")  #!rem
+            random_coords, prob = smart_random_move(grid, unchecked)
+            print(random_coords[0] + 1, random_coords[1] + 1, prob)  #! rem
             mines_detonated += MineSweep.reveal_coord(grid, random_coords)
 
     MapGen.reveal_all(grid)
