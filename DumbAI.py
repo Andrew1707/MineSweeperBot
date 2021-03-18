@@ -18,7 +18,7 @@ def random_move(grid):
 # returns list of coordinates that still have un-flagged and unrevealed neighbors
 def needed_clues(grid):
     clues_to_check = set()
-    gridlen = len(grid)  # benton work without this line ??????
+    gridlen = len(grid)
     for x in range(gridlen):
         for y in range(gridlen):
             # if revealed and not a mine
@@ -53,7 +53,7 @@ def bomb_coord_set(grid, clues_to_check):
                 actual_threats += 1
             elif n.status == "mine":
                 actual_threats += 1
-        # benton should this be greater than???
+
         # if all bombs found leave
         if actual_threats != grid[x][y].status:
             # if unrevealed bombs = clue - found bombs, then unrevealed are bombs and flag them

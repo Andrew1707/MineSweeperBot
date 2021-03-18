@@ -1,9 +1,6 @@
 import random
 
 
-# benton can we make grid and gridlen global???
-
-
 class GridUnit:
     def __init__(self, status, revealed, coordinates):
         self.status = status  # mine, number
@@ -34,7 +31,7 @@ def get_neighbors(grid, coordinates):
     j = y - 1
     while i <= x + 1:
         while j <= y + 1:
-            # benton does not add revealed bombs rip
+
             if isValid(grid, (i, j)) and not (i == x and j == y):
                 neighbors.append(grid[i][j])
             j += 1

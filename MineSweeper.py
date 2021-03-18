@@ -1,7 +1,7 @@
 import MapGeneration as MapGen
 
 # go i need to return grid or no
-# benton need to code for case of flag
+
 def reveal_coord(grid, coordinates):
     x = coordinates[0]
     y = coordinates[1]

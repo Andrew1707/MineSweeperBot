@@ -118,7 +118,7 @@ def bomb_coord_set(grid, clues_to_check):
                 actual_threats += 1
             elif n.status == "mine":
                 actual_threats += 1
-        # benton should this be greater than???
+      
         # if all bombs found leave
         if actual_threats != grid[x][y].status:
             # if unrevealed bombs = clue - found bombs, then unrevealed are bombs and flag them
@@ -326,10 +326,4 @@ grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 AI(grid)
 
-# 0 0 0 0 0
-# 0 0 0 0 0
-# 0 0 0 0 0
-# 1 1 1 1 1
-# ? ? ? ? ?
-# in x legal states, if this coord is always a bomb or is always safe do something about it
-# should know middle ? is safe
+
