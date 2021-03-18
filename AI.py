@@ -1,6 +1,14 @@
 import MineSweeper as MineSweep
 import MapGeneration as MapGen
 import random
+import sys
+
+
+x = 2500
+# max grid size is x/x
+# 2500 means max grid size is 50 by 50
+# this is needed because of the special 0 rule is implemented with recursion
+sys.setrecursionlimit(x)
 
 
 class Equation:
@@ -135,7 +143,7 @@ def bomb_coord_set(grid, clues_to_check):
                 actual_threats += 1
             elif n.status == "mine":
                 actual_threats += 1
-      
+
         # if all bombs found leave
         if actual_threats != grid[x][y].status:
             # if unrevealed bombs = clue - found bombs, then unrevealed are bombs and flag them
@@ -387,5 +395,3 @@ gridlen = 5
 grid = MapGen.makeMap(gridlen, mines)
 gridlen = len(grid)
 smartAI(grid)
-
-
