@@ -2,9 +2,10 @@ import MineSweeper as MineSweep
 import MapGeneration as MapGen
 import random
 import sys
+import matplotlib.pyplot as plt
+import copy
 
-
-x = 2500
+x = 1000000
 # max grid size is x/x
 # 2500 means max grid size is 50 by 50
 # this is needed because of the special 0 rule is implemented with recursion
@@ -53,8 +54,32 @@ def random_move(grid):
 # try and make a smart guess bases on highest possibility
 def smart_random_move(grid, clues_to_check):
     best_probability = 0
+    # what is the density of the grid based on what we have so far
+    mines = 0
+    safes = 0
+    gridlen = len(grid)
+    total_unrevealed_coords = set()
+    for x in range(gridlen):
+        for y in range(gridlen):
+            if grid[x][y].revealed == "yes":
+                if grid[x][y].status == "mine":
+                    mines += 1
+                else:
+                    safes += 1
+            elif grid[x][y].revealed == "no":
+                total_unrevealed_coords.add(grid[x][y].coordinates)
+            # its a flag
+            else:
+                mines += 1
+    # predict the density of the mines
+    safes_density = safes / (mines + safes)
+    # if there are no mines you cant predict and we use a generally nice prob
+    if safes_density == 1:
+        safes_density = 2 / 3
+
     best_coords = set()
     all_prob_coords = set()
+    # find a coord with highest success rate neighbors
     for c in clues_to_check:
         neighbors = MapGen.get_neighbors(grid, (c[0], c[1]))
         unrevealed = set()
@@ -74,22 +99,15 @@ def smart_random_move(grid, clues_to_check):
         if prob > best_probability:
             best_probability = prob
             best_coords = unrevealed
-    # if the best probability is too low pick unknown area
-    if best_probability >= 2 / 3:
+    # if the best probability less than the predicted density of safe coords use the best prob
+    if best_probability >= safes_density and best_probability != 0:
         return random.choice(tuple(best_coords)), best_probability
 
-    # get all unrevealed coords and subtract all too low prob coords from before
-    total_unrevealed_coords = set()
-    gridlen = len(grid)
-    for x in range(gridlen):
-        for y in range(gridlen):
-            if grid[x][y].revealed == "no":
-                total_unrevealed_coords.add(grid[x][y].coordinates)
     remainder = total_unrevealed_coords - all_prob_coords
 
     # if there are any remainders use them
     if len(remainder) != 0:
-        return random.choice(tuple(remainder)), "<2/3"
+        return random.choice(tuple(remainder)), safes_density
     # else use the best prob from before
     return random.choice(tuple(best_coords)), best_probability
 
@@ -293,45 +311,48 @@ def infer(database, grid):
 def dumbAI(grid):
 
     mines_detonated = 0
-    MapGen.gridPrint(grid)
-    print()
+    # MapGen.gridPrint(grid)
+    # print()
     first_move = random_move(grid)
     mines_detonated += MineSweep.reveal_coord(grid, first_move)
     flag_these = set()
     safe_spaces = set()
+    unchecked = dumb_needed_clues(grid)
     while MineSweep.win_condition(grid) == False:
-        MapGen.gridPrint(grid)
+        # MapGen.gridPrint(grid)
         # pick coord
-        unchecked = dumb_needed_clues(grid)
-        print("\nunchecked", unchecked)
+
+        # print("\nunchecked", unchecked)
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
+            unchecked = dumb_needed_clues(grid)
             flag_these = bomb_coord_set(grid, unchecked)
             safe_spaces = safe_coord_set(grid, unchecked)
-        print("\nflags", flag_these)
-        print("\nsafes", safe_spaces)
+        # print("\nflags", flag_these)
+        # print("\nsafes", safe_spaces)
         # time to make a move
         # if you can flag spend the move to flag
         if len(flag_these) != 0:
-            print("flag move")
+            # print("flag move")
             flag_coords = flag_these.pop()
             grid[flag_coords[0]][flag_coords[1]].revealed = "flag"
         # if there is a safe space then click it
         elif len(safe_spaces) != 0:
-            print("safe move")
+            # print("safe move")
             safe_coords = safe_spaces.pop()
             if grid[safe_coords[0]][safe_coords[1]].revealed == "no":
                 mines_detonated += MineSweep.reveal_coord(grid, safe_coords)
         # if you have no useful info do a random move
         else:
-            print("\n\nrandom move")
+            # print("\n\nrandom move")
             random_coords = random_move(grid)
-            print(random_coords[0] + 1, random_coords[1] + 1)
+            # print(random_coords[0], random_coords[1])
             mines_detonated += MineSweep.reveal_coord(grid, random_coords)
 
-    MapGen.reveal_all(grid)
-    MapGen.gridPrint(grid)
-    print("\nyou blew up ", mines_detonated, " mines. Lets play again")
+    # MapGen.reveal_all(grid)
+    # MapGen.gridPrint(grid)
+    # print("\nyou blew up ", mines_detonated, " mines. Lets play again")
+    return mines_detonated
 
 
 # general AI procedure: check for obvious flags and safe spaces, infer using database, then guess
@@ -347,17 +368,18 @@ def smartAI(grid):
     flag_these = set()
     safe_spaces = set()
     database = []
-
+    unchecked = smart_needed_clues(grid, database)
     while MineSweep.win_condition(grid) == False:
         MapGen.gridPrint(grid)
         # list (clue) squares with hidden neighbors
-        unchecked = smart_needed_clues(grid, database)
+
         print("\n\nMove: ", move_num)
         move_num += 1
 
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
             print("\nunchecked", unchecked)  #!rem
+            unchecked = smart_needed_clues(grid, database)
             flag_these = bomb_coord_set(grid, unchecked)
             safe_spaces = safe_coord_set(grid, unchecked)
 
@@ -388,17 +410,74 @@ def smartAI(grid):
         # if you have no useful info do a random move
         else:
             print("\n\nsmart random move")  #!rem
+            unchecked = smart_needed_clues(grid, database)
             random_coords, prob = smart_random_move(grid, unchecked)
-            print(random_coords[0] + 1, random_coords[1] + 1, prob)  #! rem
+            print(random_coords[0], random_coords[1], prob)  #! rem
             mines_detonated += MineSweep.reveal_coord(grid, random_coords)
 
     MapGen.reveal_all(grid)
     MapGen.gridPrint(grid)
     print("\nyou blew up ", mines_detonated, " mines. Lets play again")
+    return mines_detonated
 
 
-mines = 12
 gridlen = 8
+mines = 12
 grid = MapGen.makeMap(gridlen, mines)
-gridlen = len(grid)
-smartAI(grid)
+bombs = smartAI(grid)
+
+
+# * for getting dumb vs smart prob
+# gridlen = 15
+# density_list = []
+# dumb_score_list = []
+# smart_score_list = []
+
+# repeat = 10
+# for i in range(gridlen ** 2):
+#     print(i / (gridlen ** 2))
+#     dumb_score = 0
+#     smart_score = 0
+
+#     for j in range(repeat):
+#         grid = MapGen.makeMap(gridlen, i)
+#         grid_copy = copy.deepcopy(grid)
+#         smart_score += smartAI(grid)
+#         dumb_score += dumbAI(grid_copy)
+#     density_list.append(i / (gridlen ** 2))
+#     smart_score_list.append(smart_score / repeat)
+#     dumb_score_list.append(dumb_score / repeat)
+# plt.xlabel("Mine density")
+# plt.ylabel("Mines detonated")
+# plt.plot(density_list, smart_score_list, color="red", label="Smart")
+# plt.plot(density_list, dumb_score_list, color="blue", label="Dumb")
+# plt.legend(loc="best")
+# plt.show()
+
+# gridlen = 15
+# density_list = []
+# dumb_score_list = []
+# smart_score_list = []
+
+# repeat = 10
+# for i in range(gridlen ** 2):
+#     print(i / (gridlen ** 2))
+#     dumb_score = 0
+#     smart_score = 0
+
+#     for j in range(repeat):
+#         grid = MapGen.makeMap(gridlen, i)
+#         grid_copy = copy.deepcopy(grid)
+#       # 0 toggles smarts random
+#       # 1 toggles dumb random
+#         smart_score += smartAI(grid, 0)
+#         dumb_score += smartAI(grid_copy, 1)
+#     density_list.append(i / (gridlen ** 2))
+#     smart_score_list.append(smart_score / repeat)
+#     dumb_score_list.append(dumb_score / repeat)
+# plt.xlabel("Mine density")
+# plt.ylabel("Mines detonated")
+# plt.plot(density_list, smart_score_list, color="red", label="Smart random")
+# plt.plot(density_list, dumb_score_list, color="blue", label="Dumb random")
+# plt.legend(loc="best")
+# plt.show()

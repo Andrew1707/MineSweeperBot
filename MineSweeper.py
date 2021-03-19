@@ -1,6 +1,5 @@
 import MapGeneration as MapGen
 
-# go i need to return grid or no
 
 def reveal_coord(grid, coordinates):
     x = coordinates[0]
@@ -41,7 +40,7 @@ def pick_coord(grid):
                     + str(gridlength)
                     + " try again: "
                 ).split()
-            elif(grid[int(x) - 1][int(y) - 1].revealed == "yes"):
+            elif grid[int(x) - 1][int(y) - 1].revealed == "yes":
                 x, y = input("already revealed, try another coordinate: ").split()
             coordinates = (int(x) - 1, int(y) - 1)
     except ValueError:
