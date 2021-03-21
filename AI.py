@@ -315,47 +315,47 @@ def infer(database, grid):
 def dumbAI(grid):
 
     mines_detonated = 0
-    # MapGen.gridPrint(grid)
-    # print()
+    MapGen.gridPrint(grid)
+    print()
     first_move = random_move(grid)
     mines_detonated += MineSweep.reveal_coord(grid, first_move)
     flag_these = set()
     safe_spaces = set()
     unchecked = dumb_needed_clues(grid)
     while MineSweep.win_condition(grid) == False:
-        # MapGen.gridPrint(grid)
+        MapGen.gridPrint(grid)
         # pick coord
 
-        # print("\nunchecked", unchecked)
+        print("\nunchecked", unchecked)
         # if set to flag and click are empty tryand fill them
         if len(flag_these) == 0 and len(safe_spaces) == 0:
             unchecked = dumb_needed_clues(grid)
             flag_these = bomb_coord_set(grid, unchecked)
             safe_spaces = safe_coord_set(grid, unchecked)
-        # print("\nflags", flag_these)
-        # print("\nsafes", safe_spaces)
+        print("\nflags", flag_these)
+        print("\nsafes", safe_spaces)
         # time to make a move
         # if you can flag spend the move to flag
         if len(flag_these) != 0:
-            # print("flag move")
+            print("flag move")
             flag_coords = flag_these.pop()
             grid[flag_coords[0]][flag_coords[1]].revealed = "flag"
         # if there is a safe space then click it
         elif len(safe_spaces) != 0:
-            # print("safe move")
+            print("safe move")
             safe_coords = safe_spaces.pop()
             if grid[safe_coords[0]][safe_coords[1]].revealed == "no":
                 mines_detonated += MineSweep.reveal_coord(grid, safe_coords)
         # if you have no useful info do a random move
         else:
-            # print("\n\nrandom move")
+            print("\n\nrandom move")
             random_coords = random_move(grid)
-            # print(random_coords[0], random_coords[1])
+            print(random_coords[0], random_coords[1])
             mines_detonated += MineSweep.reveal_coord(grid, random_coords)
 
-    # MapGen.reveal_all(grid)
-    # MapGen.gridPrint(grid)
-    # print("\nyou blew up ", mines_detonated, " mines. Lets play again")
+    MapGen.reveal_all(grid)
+    MapGen.gridPrint(grid)
+    print("\nyou blew up ", mines_detonated, " mines. Lets play again")
     return mines_detonated
 
 
@@ -458,6 +458,7 @@ bombs = smartAI(grid)
 # plt.legend(loc="best")
 # plt.show()
 
+# * for smart vs dumb random
 # gridlen = 15
 # density_list = []
 # dumb_score_list = []
