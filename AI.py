@@ -300,6 +300,10 @@ def infer(database, grid):
                     elif tentative_eq.mines_left == 0:
                         safe_coords = safe_coords | tentative_eq.loc_set
 
+                    # all squares in equation are mines
+                    elif tentative_eq.mines_left == len(tentative_eq.loc_set):
+                        mine_coords = mine_coords | tentative_eq.loc_set
+
                     # no explicit conclusion, add new equation to database
                     else:
                         database.append(tentative_eq)
